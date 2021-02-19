@@ -140,7 +140,7 @@ func (node *NodeInfo) FindChildren(pods fiterPods) []*NodeInfo {
 
 func (node *NodeInfo) ShowChoices() []*PodInfo {
 	choices := make([]*PodInfo, 1)
-	for choice := node.Parent; choice != nil; choice = choice.Parent {
+	for choice := node; choice != nil; choice = choice.Parent {
 		if choice.Take {
 			choices = append(choices, choice.Parent.Pod)
 		}
