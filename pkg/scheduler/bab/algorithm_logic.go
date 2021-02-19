@@ -47,7 +47,7 @@ func ScheduleNode(pods []*v1.Pod, host *v1.Node) []int {
 				if child.Profit > bestNode.Profit {
 					bestNode = child
 				}
-				if child.Bound > bestNode.Bound {
+				if child.Bound > bestNode.Profit {
 					heap.Push(&nodes, child)
 				}
 			}
