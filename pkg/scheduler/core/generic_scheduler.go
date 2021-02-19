@@ -117,6 +117,7 @@ type ScheduleAlgorithm interface {
 	// Prioritizers returns a slice of priority config. This is exposed for
 	// testing.
 	Prioritizers() []priorities.PriorityConfig
+	PubToPredict(pod *v1.Pod, nodes []*v1.Node) []*v1.Node
 }
 
 // ScheduleResult represents the result of one pod scheduled. It will contain
