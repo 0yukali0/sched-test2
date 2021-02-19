@@ -15,7 +15,7 @@ func (a fiterPods) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 func (a fiterPods) Less(i, j int) bool {
-	return a[i].Usage < a[j].Usage
+	return a[i].Usage > a[j].Usage
 }
 
 func NewFilterPods(pods []*v1.Pod, CapicityCoreAndMen float64) fiterPods {
