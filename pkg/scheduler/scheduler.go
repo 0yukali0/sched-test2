@@ -249,8 +249,8 @@ func (sched *Scheduler) Run() {
 	if !sched.config.WaitForCacheSync() {
 		return
 	}
-	klog.info("1:Schedule start")
-	go wait.Until(sched.PubToPredict, 0, sched.config.StopEverything)
+	klog.Info("1:Schedule start")
+	go wait.Until(sched.ScheduleBab, 0, sched.config.StopEverything)
 }
 
 // Config returns scheduler's config pointer. It is exposed for testing purposes.

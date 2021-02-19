@@ -28,6 +28,7 @@ func (sched *Scheduler) ScheduleBab() {
 	nodes, _ := sched.config.NodeLister.List()
 	nodeBook := make(map[string]*kubeNode, len(nodes))
 	for index, node := range nodes {
+		klog.Infof("candicate node:%s", node.Name)
 		info := &kubeNode{
 			Index:      index,
 			Node:       node,
@@ -40,9 +41,12 @@ func (sched *Scheduler) ScheduleBab() {
 	for pod := sched.config.NextPod(); pod != nil; pod = sched.config.NextPod() {
 		pods = append(pods, pod)
 	}
+	klog.Infof("candicate pods num:%v", len(pods))
+
 	//for each pod filter nodes and record in nodeInfo
 	for index, pod := range pods {
 		filterdNodes := sched.config.Algorithm.PubToPredict(pod, nodes)
+		klog.Infof("choices of pod:%s %v", pod.Name, len(filterdNodes))
 		for _, fiterdnode := range filterdNodes {
 			host := nodeBook[fiterdnode.ObjectMeta.Name]
 			host.Scheduling = append(host.Scheduling, index)
@@ -67,13 +71,17 @@ func (sched *Scheduler) ScheduleBab() {
 			waitToScheduling = append(waitToScheduling, target)
 			recordPodOrinIndex = append(recordPodOrinIndex, candicate)
 		}
+		klog.Infof("node schedule start:%s %v", node.Node.Name, len(waitToScheduling))
 		result := bab.ScheduleNode(waitToScheduling, node.Node)
+		klog.Infof("result pod list:%v", len(result))
 		chosenPods := make([]*v1.Pod, 1)
 		for _, chosenPodIndex := range result {
 			chosenPods = append(chosenPods, recordPodOrinIndex[chosenPodIndex].Pod)
 		}
+
 		//set result to exe and next node
 		for _, pod := range chosenPods {
+			klog.Infof("pod binding:%v", pod.Name)
 			plugins := sched.config.PluginSet
 			// Remove all plugin context data at the beginning of a scheduling cycle.
 			if plugins.Data().Ctx != nil {

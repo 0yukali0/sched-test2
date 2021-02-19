@@ -32,6 +32,7 @@ func ScheduleNode(pods []*v1.Pod, host *v1.Node) []int {
 	root := NewNodeInfo(capacity)
 	root.Allocate = allocate
 	root.SetIndexs(shedulingPods)
+	root.SetPod(shedulingPods)
 	root.Profit = 1 - (float64(allocateCore*allocateMem) / float64(maxCore*maxMem))
 	root.SetBound(shedulingPods)
 	bestNode := root
