@@ -46,10 +46,14 @@ func (sched *Scheduler) ScheduleBab() {
 	//this time of v1.pods
 	pods := make([]*v1.Pod, 1)
 	pods = sched.config.SchedulingQueue.PendingPods()
+	if len(pods) == 0 {
+		klog.Info("empty")
+		return
+	}
 	klog.Infof("candicate pods num:%v", len(pods))
-	for index := len(pods) {
+	for index := len(pods); index > 0; {
 		_, err := sched.config.SchedulingQueue.Pop()
-		klog.Infof("%d:%v",err)
+		klog.Infof("%d:%v", index, err)
 		index--
 	}
 	/*
@@ -91,6 +95,10 @@ func (sched *Scheduler) ScheduleBab() {
 		klog.Infof("scheduling node name in nodeBook:%s", node.Node.Name)
 		waitToScheduling := make([]*v1.Pod, 1)
 		recordPodOrinIndex := make([]*schedulingPod, 1)
+		if len(node.Scheduling) == 0 {
+			klog.Infof("no schedule of %s", node.Node.Name)
+			continue
+		}
 		for _, podIndex := range node.Scheduling {
 			target := pods[podIndex]
 			targetName := target.ObjectMeta.Name
