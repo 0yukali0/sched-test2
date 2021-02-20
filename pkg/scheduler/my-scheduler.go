@@ -47,7 +47,6 @@ func (sched *Scheduler) ScheduleBab() {
 	pods := make([]*v1.Pod, 1)
 	pods = sched.config.SchedulingQueue.PendingPods()
 	if len(pods) == 0 {
-		klog.Info("empty")
 		return
 	}
 	klog.Infof("candicate pods num:%v", len(pods))
