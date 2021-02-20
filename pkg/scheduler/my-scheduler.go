@@ -24,6 +24,12 @@ type schedulingPod struct {
 }
 
 func (sched *Scheduler) ScheduleBab() {
+	plugins := sched.config.PluginSet
+	// Remove all plugin context data at the beginning of a scheduling cycle.
+	if plugins.Data().Ctx != nil {
+		plugins.Data().Ctx.Reset()
+	}
+
 	//know what nodes we get
 	nodes, _ := sched.config.NodeLister.List()
 	nodeBook := make(map[string]*kubeNode, len(nodes))
@@ -36,12 +42,38 @@ func (sched *Scheduler) ScheduleBab() {
 		}
 		nodeBook[node.ObjectMeta.Name] = info
 	}
+	klog.Info("pods we got")
 	//this time of v1.pods
 	pods := make([]*v1.Pod, 1)
-	for pod := sched.config.NextPod(); pod != nil; pod = sched.config.NextPod() {
-		pods = append(pods, pod)
-	}
+	pods = sched.config.SchedulingQueue.PendingPods()
 	klog.Infof("candicate pods num:%v", len(pods))
+	for index := len(pods) {
+		_, err := sched.config.SchedulingQueue.Pop()
+		klog.Infof("%d:%v",err)
+		index--
+	}
+	/*
+		task, err := sched.config.SchedulingQueue.Pop()
+			if task == nil {
+				return
+			}
+			for task != nil {
+				klog.Infof("Error:%v", err)
+				klog.Infof("candicate pod name:%v", task.Name)
+				if task.DeletionTimestamp != nil {
+					sched.config.Recorder.Eventf(task, v1.EventTypeWarning, "FailedScheduling", "skip schedule deleting pod: %v/%v", task.Namespace, task.Name)
+					klog.V(3).Infof("Skip schedule deleting pod: %v/%v", task.Namespace, task.Name)
+					task, err = sched.config.SchedulingQueue.Pop()
+					continue
+				}
+				pods = append(pods, task)
+				task, err = sched.config.SchedulingQueue.Pop()
+				klog.Infof("candicate pods:%v", pods)
+				if task == nil {
+					klog.Info("candicate pod end")
+				}
+			}
+	*/
 
 	//for each pod filter nodes and record in nodeInfo
 	for index, pod := range pods {
@@ -56,6 +88,7 @@ func (sched *Scheduler) ScheduleBab() {
 	ScheduleFinishedPod := make(map[string]string, 1)
 	//for each node to scheduling
 	for _, node := range nodeBook {
+		klog.Infof("scheduling node name in nodeBook:%s", node.Node.Name)
 		waitToScheduling := make([]*v1.Pod, 1)
 		recordPodOrinIndex := make([]*schedulingPod, 1)
 		for _, podIndex := range node.Scheduling {
@@ -82,7 +115,7 @@ func (sched *Scheduler) ScheduleBab() {
 		//set result to exe and next node
 		for _, pod := range chosenPods {
 			klog.Infof("pod binding:%v", pod.Name)
-			plugins := sched.config.PluginSet
+			plugins = sched.config.PluginSet
 			// Remove all plugin context data at the beginning of a scheduling cycle.
 			if plugins.Data().Ctx != nil {
 				plugins.Data().Ctx.Reset()
