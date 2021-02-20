@@ -2,6 +2,7 @@ package bab
 
 import (
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/klog"
 )
 
 //"k8s.io/apimachinery/pkg/api/resource"
@@ -27,9 +28,10 @@ func NewPodInfo(pod *v1.Pod) *PodInfo {
 			RequestedMen += container.Resources.Requests[v1.ResourceMemory].Value()
 		}
 	*/
+	klog.Infof("containers:%d", len(pod.Spec.Containers))
 	for _, container := range pod.Spec.Containers {
-		resourceCpu := container.Resources.Requests[v1.ResourceCPU]
-		resouceMem := container.Resources.Requests[v1.ResourceMemory]
+		resourceCpu := container.Resources.Limits[v1.ResourceCPU]
+		resouceMem := container.Resources.Limits[v1.ResourceMemory]
 		RequestedCore += resourceCpu.MilliValue()
 		RequestedMen += resouceMem.Value()
 	}

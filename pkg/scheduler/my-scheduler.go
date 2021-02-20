@@ -34,87 +34,80 @@ func (sched *Scheduler) ScheduleBab() {
 	nodes, _ := sched.config.NodeLister.List()
 	nodeBook := make(map[string]*kubeNode, len(nodes))
 	for index, node := range nodes {
-		klog.Infof("candicate node:%s", node.Name)
 		info := &kubeNode{
 			Index:      index,
 			Node:       node,
-			Scheduling: make([]int, 1),
+			Scheduling: make([]int, 0),
 		}
 		nodeBook[node.ObjectMeta.Name] = info
 	}
-	klog.Info("pods we got")
 	//this time of v1.pods
-	pods := make([]*v1.Pod, 1)
-	pods = sched.config.SchedulingQueue.PendingPods()
-	if len(pods) == 0 {
+	pods := make([]*v1.Pod, 0)
+	PopPods := make([]*v1.Pod, 0)
+	pendingPods := sched.config.SchedulingQueue.PendingPods()
+	if len(pendingPods) == 0 {
 		return
 	}
-	klog.Infof("candicate pods num:%v", len(pods))
-	for index := len(pods); index > 0; {
-		_, err := sched.config.SchedulingQueue.Pop()
+	for index := len(pendingPods); index > 0; {
+		pod, err := sched.config.SchedulingQueue.Pop()
+		PopPods = append(PopPods, pod)
 		klog.Infof("%d:%v", index, err)
+		klog.Infof("pod:%v", pod.Name)
+		klog.Infof("PoPpods:%v", PopPods)
 		index--
 	}
-	/*
-		task, err := sched.config.SchedulingQueue.Pop()
-			if task == nil {
-				return
-			}
-			for task != nil {
-				klog.Infof("Error:%v", err)
-				klog.Infof("candicate pod name:%v", task.Name)
-				if task.DeletionTimestamp != nil {
-					sched.config.Recorder.Eventf(task, v1.EventTypeWarning, "FailedScheduling", "skip schedule deleting pod: %v/%v", task.Namespace, task.Name)
-					klog.V(3).Infof("Skip schedule deleting pod: %v/%v", task.Namespace, task.Name)
-					task, err = sched.config.SchedulingQueue.Pop()
-					continue
-				}
-				pods = append(pods, task)
-				task, err = sched.config.SchedulingQueue.Pop()
-				klog.Infof("candicate pods:%v", pods)
-				if task == nil {
-					klog.Info("candicate pod end")
-				}
-			}
-	*/
+	pods = pendingPods
+	klog.Info("pod slice init suceess")
+	klog.Infof("pods slice:%v", pods)
 
 	//for each pod filter nodes and record in nodeInfo
 	for index, pod := range pods {
-		filterdNodes := sched.config.Algorithm.PubToPredict(pod, nodes)
-		klog.Infof("choices of pod:%s %v", pod.Name, len(filterdNodes))
+		filterdNodes := make([]*v1.Node, 0)
+		filterdNodes = append(filterdNodes, sched.config.Algorithm.PubToPredict(pod, nodes)...)
+		klog.Infof("choices of pod:%v", pod.Name)
+		klog.Infof("choices of filterdNode len:%v", len(filterdNodes))
+		klog.Infof("choices of filterdNode content:%v", filterdNodes)
+		if len(filterdNodes) == 0 {
+			klog.Infof("no fiterNode")
+			continue
+		}
+		klog.Infof("fiterNode record")
 		for _, fiterdnode := range filterdNodes {
+			klog.Infof("recored node:%v", filterdNodes)
 			host := nodeBook[fiterdnode.ObjectMeta.Name]
 			host.Scheduling = append(host.Scheduling, index)
 		}
 	}
 	//init scheduling pod slice empty
-	ScheduleFinishedPod := make(map[string]string, 1)
+	ScheduleFinishedPod := make(map[string]string, 0)
 	//for each node to scheduling
 	for _, node := range nodeBook {
-		klog.Infof("scheduling node name in nodeBook:%s", node.Node.Name)
-		waitToScheduling := make([]*v1.Pod, 1)
-		recordPodOrinIndex := make([]*schedulingPod, 1)
+		klog.Infof("scheduling node name in nodeBook:%v", node.Node.Name)
+		waitToScheduling := make([]*v1.Pod, 0)
+		recordPodOrinIndex := make([]*schedulingPod, 0)
 		if len(node.Scheduling) == 0 {
-			klog.Infof("no schedule of %s", node.Node.Name)
+			klog.Infof("no schedule of %v", node.Node.Name)
 			continue
 		}
+		klog.Infof("node.Scheduling of %v", node.Scheduling)
 		for _, podIndex := range node.Scheduling {
-			target := pods[podIndex]
-			targetName := target.ObjectMeta.Name
+			targetName := pods[podIndex].ObjectMeta.Name
 			if _, scheduled := ScheduleFinishedPod[targetName]; scheduled {
 				continue
 			}
 			candicate := &schedulingPod{
-				Pod:   target,
+				Pod:   pods[podIndex],
 				Index: podIndex,
 			}
-			waitToScheduling = append(waitToScheduling, target)
+			klog.Infof("candicate pod %v-> node %v", pods[podIndex].Name, node.Node.Name)
+			waitToScheduling = append(waitToScheduling, pods[podIndex])
 			recordPodOrinIndex = append(recordPodOrinIndex, candicate)
 		}
-		klog.Infof("node schedule start:%s %v", node.Node.Name, len(waitToScheduling))
+		klog.Infof("node schedule start:%v %v", node.Node.Name, len(waitToScheduling))
 		result := bab.ScheduleNode(waitToScheduling, node.Node)
 		klog.Infof("result pod list:%v", len(result))
-		chosenPods := make([]*v1.Pod, 1)
+
+		chosenPods := make([]*v1.Pod, 0)
 		for _, chosenPodIndex := range result {
 			chosenPods = append(chosenPods, recordPodOrinIndex[chosenPodIndex].Pod)
 		}
