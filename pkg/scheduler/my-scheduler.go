@@ -51,29 +51,23 @@ func (sched *Scheduler) ScheduleBab() {
 	for index := len(pendingPods); index > 0; {
 		pod, err := sched.config.SchedulingQueue.Pop()
 		PopPods = append(PopPods, pod)
-		klog.Infof("%d:%v", index, err)
-		klog.Infof("pod:%v", pod.Name)
-		klog.Infof("PoPpods:%v", PopPods)
+		klog.Infof("%d:%v,pod:%v,pods len %v", index, err, pod.Name, PopPods)
 		index--
 	}
 	pods = pendingPods
-	klog.Info("pod slice init suceess")
-	klog.Infof("pods slice:%v", pods)
+	klog.Infof("pods slice init:%v", len(pods))
 
 	//for each pod filter nodes and record in nodeInfo
 	for index, pod := range pods {
 		filterdNodes := make([]*v1.Node, 0)
 		filterdNodes = append(filterdNodes, sched.config.Algorithm.PubToPredict(pod, nodes)...)
-		klog.Infof("choices of pod:%v", pod.Name)
-		klog.Infof("choices of filterdNode len:%v", len(filterdNodes))
-		klog.Infof("choices of filterdNode content:%v", filterdNodes)
+		klog.Infof("choices of pod:%v, node num:%v", pod.Name, len(filterdNodes))
 		if len(filterdNodes) == 0 {
-			klog.Infof("no fiterNode")
+			klog.Info("no fiterNode")
 			continue
 		}
-		klog.Infof("fiterNode record")
 		for _, fiterdnode := range filterdNodes {
-			klog.Infof("recored node:%v", filterdNodes)
+			klog.Infof("recored node:%v", fiterdnode)
 			host := nodeBook[fiterdnode.ObjectMeta.Name]
 			host.Scheduling = append(host.Scheduling, index)
 		}
@@ -99,7 +93,7 @@ func (sched *Scheduler) ScheduleBab() {
 				Pod:   pods[podIndex],
 				Index: podIndex,
 			}
-			klog.Infof("candicate pod %v-> node %v", pods[podIndex].Name, node.Node.Name)
+			klog.Infof("candicate pod %v", pods[podIndex].Name)
 			waitToScheduling = append(waitToScheduling, pods[podIndex])
 			recordPodOrinIndex = append(recordPodOrinIndex, candicate)
 		}

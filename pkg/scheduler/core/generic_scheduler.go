@@ -442,7 +442,8 @@ func (g *genericScheduler) findNodesThatFit(pod *v1.Pod, nodes []*v1.Node) ([]*v
 	} else {
 		allNodes := int32(g.cache.NodeTree().NumNodes())
 		numNodesToFind := g.numFeasibleNodesToFind(allNodes)
-		klog.Infof("nodes num%v,tofind num %v", allNodes, numNodesToFind)
+		//klog.Infof("nodes num%v,tofind num %v", allNodes, numNodesToFind)
+
 		// Create filtered list with enough space to avoid growing it
 		// and allow assigning.
 		filtered = make([]*v1.Node, numNodesToFind)
@@ -467,7 +468,7 @@ func (g *genericScheduler) findNodesThatFit(pod *v1.Pod, nodes []*v1.Node) ([]*v
 				g.schedulingQueue,
 				g.alwaysCheckAllPredicates,
 			)
-			klog.Infof("node name%v,%v isfit %v", nodeName, pod.Name, fits)
+
 			if err != nil {
 				predicateResultLock.Lock()
 				errs[err.Error()]++
@@ -476,7 +477,7 @@ func (g *genericScheduler) findNodesThatFit(pod *v1.Pod, nodes []*v1.Node) ([]*v
 			}
 			if fits {
 				length := atomic.AddInt32(&filteredLen, 1)
-				klog.Infof("find length %v,feasible length %v", length, numNodesToFind)
+				klog.Infof("node name%v,%v isfit %v,length %v ", nodeName, pod.Name, fits, length)
 				if length > numNodesToFind {
 					cancel()
 					atomic.AddInt32(&filteredLen, -1)
@@ -618,12 +619,13 @@ func podFitsOnNode(
 			//TODO (yastij) : compute average predicate restrictiveness to export it as Prometheus metric
 			if predicate, exist := predicateFuncs[predicateKey]; exist {
 				fit, reasons, err = predicate(pod, metaToUse, nodeInfoToUse)
-				klog.Infof("predicateKey %v ,predict %v ,reason is %v", predicateKey, fit, reasons)
+
 				if err != nil {
 					return false, []predicates.PredicateFailureReason{}, err
 				}
 
 				if !fit {
+					klog.Infof("predicateKey %v ,predict %v ,reason is %v", predicateKey, fit, reasons)
 					// eCache is available and valid, and predicates result is unfit, record the fail reasons
 					failedPredicates = append(failedPredicates, reasons...)
 					// if alwaysCheckAllPredicates is false, short circuit all predicates when one predicate fails.
