@@ -54,7 +54,7 @@ func ScheduleNode(pods []*v1.Pod, host *v1.Node) []int {
 		}
 	}
 	takePath := bestNode.ShowChoices()
-	result := make([]int, 1)
+	result := make([]int, 0)
 	for _, takePod := range takePath {
 		result = append(result, takePod.Index)
 	}

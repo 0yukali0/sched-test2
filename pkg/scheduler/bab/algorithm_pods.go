@@ -19,7 +19,7 @@ func (a fiterPods) Less(i, j int) bool {
 }
 
 func NewFilterPods(pods []*v1.Pod, CapicityCoreAndMen float64) fiterPods {
-	podInfos := make(fiterPods, 1)
+	podInfos := make(fiterPods, 0)
 	for index, pod := range pods {
 		klog.Infof("filter pod %s ,%v", pod.Name, pod)
 		mypod := NewPodInfo(pod)
