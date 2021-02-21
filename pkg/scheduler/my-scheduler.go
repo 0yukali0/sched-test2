@@ -51,7 +51,7 @@ func (sched *Scheduler) ScheduleBab() {
 	for index := len(pendingPods); index > 0; {
 		pod, err := sched.config.SchedulingQueue.Pop()
 		PopPods = append(PopPods, pod)
-		klog.Infof("%d:%v,pod:%v,pods len %v", index, err, pod.Name, PopPods)
+		klog.Infof("%d:%v,pod:%v,pods len %v", index, err, pod.Name, len(PopPods))
 		index--
 	}
 	pods = pendingPods
