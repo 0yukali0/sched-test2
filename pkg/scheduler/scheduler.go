@@ -249,7 +249,6 @@ func (sched *Scheduler) Run() {
 	if !sched.config.WaitForCacheSync() {
 		return
 	}
-	klog.Info("1:Schedule start")
 	go wait.Until(sched.ScheduleBab, 0, sched.config.StopEverything)
 }
 

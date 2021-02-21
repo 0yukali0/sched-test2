@@ -496,7 +496,7 @@ func (g *genericScheduler) findNodesThatFit(pod *v1.Pod, nodes []*v1.Node) ([]*v
 		workqueue.ParallelizeUntil(ctx, 16, int(allNodes), checkNode)
 
 		filtered = filtered[:filteredLen]
-		klog.Infof("filteredLen length err len %v", filteredLen, len(errs))
+		klog.Infof("filteredLen length %v,err len %v", filteredLen, len(errs))
 		if len(errs) > 0 {
 			return []*v1.Node{}, FailedPredicateMap{}, errors.CreateAggregateFromMessageCountMap(errs)
 		}

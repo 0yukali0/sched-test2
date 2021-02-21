@@ -67,7 +67,7 @@ func (sched *Scheduler) ScheduleBab() {
 			continue
 		}
 		for _, fiterdnode := range filterdNodes {
-			klog.Infof("recored node:%v", fiterdnode)
+			klog.Infof("index%v of recored node:%v", index, fiterdnode.Name)
 			host := nodeBook[fiterdnode.ObjectMeta.Name]
 			host.Scheduling = append(host.Scheduling, index)
 		}
